@@ -615,7 +615,86 @@ const static struct cli_command cmds_user[] STATIC_CLI_CMD_ATTRIBUTE = {
     {"stack_mgmr", "Wi-Fi Stack", cmd_stack_mgmr},
     {"wifi", "wifi", cmd_wifi},
 };
+// void debug_handler(void)
+// {
+//     printf("mcause: [0x%08x]\r\n", (int)__get_MCAUSE());
+//     printf("mstatus: [0x%08x]\r\n", (int)__get_MSTATUS());
 
+// }
+#include <rthw.h>
+#include <rtthread.h>
+#include "core_rv32.h"
+static int time_cnt = 0;
+extern void vPortSetupTimerInterrupt( void );
+extern void xPortStartFirstTask( void );
+extern const uint32_t __freertos_irq_stack_top[];
+void rt_hw_board_init(void)
+{
+    bl_uart_init(0, UART_PIN_TX_FOR_DEBUG, UART_PIN_RX_FOR_DEBUG, 255, 255, 2000000);
+
+    printf("mtimer clock freq:%ld\r\n", CPU_Get_MTimer_Clock());
+    // printf("mstatus:%08x\r\n", (int)__read_mstatus_value());
+    bl_sys_lowlevel_init();
+    // _dump_boot_info();
+
+    puts("[OS] Starting OS Scheduler...\r\n");
+
+    printf("%s\r\n", __FUNCTION__);
+    // bl_uart_init(0, UART_PIN_TX_FOR_DEBUG, UART_PIN_RX_FOR_DEBUG, 255, 255, 2000000);
+    
+   vPortSetupTimerInterrupt();
+
+    // Interrupt_Handler_Register(7, mtime_handler);
+
+    CPU_Interrupt_Enable(7);
+    // xPortStartFirstTask();
+
+#if 0
+    uint32_t status = __get_MSTATUS();
+     printf("mstatus1:%08x\r\n", (int)(status));
+   status |= 0x3888;
+    __set_MSTATUS(status);
+    printf("mstatus2:%08x\r\n", (int)(status));
+#endif
+
+    printf("StackTop:[0x%08x]\r\n", (int)__freertos_irq_stack_top);
+    printf("mscratch:[0x%08x]\r\n", (int)__get_MSCRATCH());
+    printf("      sp:[0x%08x]\r\n", (int)__get_SP());
+}
+
+void rt_hw_console_output(const char *str)
+{
+    printf("%s\r\n", str);
+}
+void debug_handler(void)
+{
+    printf("\r\ndebug_handler:\r\n");
+    printf("mcause: [0x%08x]\r\n", (int)__get_MCAUSE());
+    printf("mstatus: [0x%08x]\r\n", (int)__get_MSTATUS());
+    printf("mscratch:[0x%08x]\r\n", (int)__get_MSCRATCH());
+    printf("      sp:[0x%08x]\r\n", (int)__get_SP());
+}
+
+void mtime_handler(void)
+{   
+    rt_tick_increase();
+    // csi_coret_config(uxTimerIncrementsForOneTick, 7);
+    time_cnt ++;
+
+    // printf("mtime_handler: %d [0x%08x]\r\n", cnt , rt_interrupt_get_nest());
+
+}
+void main()
+{
+    int cnt = 0;
+    while(1) {
+        printf("test_main:%d\r\n", cnt ++);
+        // rt_sem_release(&sem_lock);
+        rt_thread_delay(100);
+    }
+}
+
+#if 0
 void bfl_main()
 {
     static StackType_t aos_loop_proc_stack[1024];
@@ -642,3 +721,4 @@ void bfl_main()
     puts("[OS] Starting OS Scheduler...\r\n");
     vTaskStartScheduler();
 }
+#endif
