@@ -8,7 +8,7 @@
 #include <bl_uart.h>
 #include <cli.h>
 #include <event_device.h>
-#include <freertos_e907_helper_ps_with_irq.h>
+// #include <freertos_e907_helper_ps_with_irq.h>
 #include <stdio.h>
 #include <string.h>
 #include <task.h>
