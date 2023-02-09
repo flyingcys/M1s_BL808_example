@@ -8,7 +8,7 @@
 #include <bl_uart.h>
 #include <cli.h>
 #include <event_device.h>
-#include <freertos_e907_helper_ps_with_irq.h>
+// #include <freertos_e907_helper_ps_with_irq.h>
 #include <stdio.h>
 #include <string.h>
 #include <task.h>
@@ -624,6 +624,20 @@ const static struct cli_command cmds_user[] STATIC_CLI_CMD_ATTRIBUTE = {
 #include <rthw.h>
 #include <rtthread.h>
 #include "core_rv32.h"
+#include <rtconfig.h>
+
+#include "bl_sys.h"
+#include "bl_irq.h"
+#include "bl808_clock.h"
+
+#include "bl808.h"
+
+extern uint8_t _heap_start;
+extern uint8_t _heap_size;
+
+#define RT_HW_HEAP_BEGIN    (void*)&_heap_start
+#define RT_HW_HEAP_END      (void*)(&_heap_start + (rt_ubase_t)&_heap_size)
+
 static int time_cnt = 0;
 extern void vPortSetupTimerInterrupt( void );
 extern void xPortStartFirstTask( void );
@@ -655,6 +669,11 @@ void rt_hw_board_init(void)
    status |= 0x3888;
     __set_MSTATUS(status);
     printf("mstatus2:%08x\r\n", (int)(status));
+#endif
+
+#ifdef RT_USING_HEAP
+    /* initialize memory system */
+    rt_system_heap_init(RT_HW_HEAP_BEGIN, RT_HW_HEAP_END);
 #endif
 
     printf("StackTop:[0x%08x]\r\n", (int)__freertos_irq_stack_top);
